@@ -26,9 +26,17 @@ pub fn name_with_limit(s: &str, limit: usize) -> String {
         return String::new();
     }
 
-    let n: Vec<usize> = s.iter().map(|w| w.graphemes(true).count()).collect();
-    let spaces = s.len() - 1;
-    let mut count = n.iter().sum::<usize>() + spaces;
+    let len = s.len();
+    let mut n = Vec::with_capacity(len);
+    let mut sum = 0;
+    for w in &s {
+        let c = w.graphemes(true).count();
+        sum += c;
+        n.push(c);
+    }
+
+    let spaces = len - 1;
+    let mut count = sum + spaces;
     for (w, c) in s.iter_mut().zip(n).rev() {
         if count <= limit {
             break;
