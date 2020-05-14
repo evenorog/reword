@@ -1,5 +1,9 @@
 # reword
 
+[![Travis](https://travis-ci.com/evenorog/reword.svg?branch=master)](https://travis-ci.com/evenorog/reword)
+[![Crates.io](https://img.shields.io/crates/v/reword.svg)](https://crates.io/crates/reword)
+[![Docs](https://docs.rs/reword/badge.svg)](https://docs.rs/reword)
+
 Provides nice formatting of names.
 
 ```rust
