@@ -15,21 +15,29 @@ use unicode_segmentation::UnicodeSegmentation;
 
 /// Formats the input string as a name.
 pub fn name(s: &str) -> String {
-    let s: Vec<&str> = s.unicode_words().collect();
-    s.join(" ")
+    let mut name = String::with_capacity(s.len());
+    let mut it = s.unicode_words();
+    if let Some(w) = it.next() {
+        name.push_str(w);
+        for w in it {
+            name.push(' ');
+            name.push_str(w)
+        }
+    }
+    name
 }
 
 /// Formats the input string as a name and limits the length of the name.
 pub fn name_with_limit(s: &str, limit: usize) -> String {
-    let mut s: Vec<&str> = s.unicode_words().collect();
-    if s.is_empty() {
+    let mut name: Vec<&str> = s.unicode_words().collect();
+    if name.is_empty() {
         return String::new();
     }
 
-    let len = s.len();
+    let len = name.len();
     let mut n = Vec::with_capacity(len);
     let mut sum = 0;
-    for w in &s {
+    for &w in &name {
         let c = w.graphemes(true).count();
         sum += c;
         n.push(c);
@@ -37,7 +45,7 @@ pub fn name_with_limit(s: &str, limit: usize) -> String {
 
     let spaces = len - 1;
     let mut count = sum + spaces;
-    for (w, c) in s.iter_mut().zip(n).rev() {
+    for (w, c) in name.iter_mut().zip(n).rev() {
         if count <= limit {
             break;
         }
@@ -46,11 +54,11 @@ pub fn name_with_limit(s: &str, limit: usize) -> String {
     }
 
     if count <= limit {
-        s.join(" ")
+        name.join(" ")
     } else if (count - spaces) <= limit {
-        s.concat()
+        name.concat()
     } else {
-        s[..limit].concat()
+        name[..limit].concat()
     }
 }
 
