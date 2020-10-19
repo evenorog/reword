@@ -63,17 +63,37 @@ pub fn name_with_limit(s: &str, limit: usize) -> String {
 }
 
 /// Join the list with an 'or' before the last element of the list.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::or_join(&["a", "b"]), "a or b");
+/// assert_eq!(reword::or_join(&["a", "b", "c"]), "a, b, or c");
+/// ```
 pub fn or_join(v: &[impl AsRef<str>]) -> String {
-    join(v, ", or ")
+    if v.len() < 3 {
+        join(v, " or ")
+    } else {
+        join(v, ", or ")
+    }
 }
 
 /// Join the list with an 'and' before the last element of the list.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::and_join(&["a", "b"]), "a and b");
+/// assert_eq!(reword::and_join(&["a", "b", "c"]), "a, b, and c");
+/// ```
 pub fn and_join(v: &[impl AsRef<str>]) -> String {
-    join(v, ", and ")
+    if v.len() < 3 {
+        join(v, " and ")
+    } else {
+        join(v, ", and ")
+    }
 }
 
 fn join(v: &[impl AsRef<str>], sep: &str) -> String {
-    let mut s = String::new();
+    let mut s = String::with_capacity(v.len() * 16);
     if let Some((first, tail)) = v.split_first() {
         s.push_str(first.as_ref());
         if let Some((last, tail)) = tail.split_last() {
