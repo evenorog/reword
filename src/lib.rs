@@ -1,4 +1,4 @@
-//! Provides nice formatting of names.
+//! Provides functions for human readable formatting of words and sentences.
 //!
 //! ```
 //! let s = "(Even),Olsson&Rogstadkjærnet?";
@@ -14,6 +14,11 @@ use alloc::{string::String, vec::Vec};
 use unicode_segmentation::UnicodeSegmentation;
 
 /// Formats the input string as a name.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::name("(Even),Olsson&Rogstadkjærnet?"), "Even Olsson Rogstadkjærnet");
+/// ```
 pub fn name(s: &str) -> String {
     let mut name = String::with_capacity(s.len());
     let mut it = s.unicode_words();
@@ -28,6 +33,11 @@ pub fn name(s: &str) -> String {
 }
 
 /// Formats the input string as a name and limits the length of the name.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::name_with_limit("(Even),Olsson&Rogstadkjærnet?", 4), "EOR");
+/// ```
 pub fn name_with_limit(s: &str, limit: usize) -> String {
     let mut name: Vec<&str> = s.unicode_words().collect();
     if name.is_empty() {
