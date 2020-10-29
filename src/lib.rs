@@ -74,6 +74,36 @@ pub fn name_with_limit<T: AsRef<str>>(s: T, limit: usize) -> String {
     }
 }
 
+/// Creates a username from the provided string.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::username("Even O. R."), "evenor");
+/// ```
+pub fn username<T: AsRef<str>>(s: T) -> String {
+    let s = s.as_ref();
+    let mut username = String::with_capacity(s.len());
+    for w in s.unicode_words().map(str::to_lowercase) {
+        username.push_str(&w)
+    }
+    username
+}
+
+/// Creates a username from the provided string and limit.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::username_with_limit("Even Olsson Rogstadkjærnet", 12), "evenor");
+/// ```
+pub fn username_with_limit<T: AsRef<str>>(s: T, limit: usize) -> String {
+    let name = name_with_limit(s, limit);
+    let mut username = String::with_capacity(name.len());
+    for w in name.to_lowercase().split(' ') {
+        username.push_str(&w)
+    }
+    username
+}
+
 /// Join the list with an 'or' before the last element of the list.
 ///
 /// # Examples
@@ -141,11 +171,17 @@ mod tests {
         assert_eq!(crate::or_join::<&str>(&["a"]), "a");
         assert_eq!(crate::or_join::<&str>(&["a", "b"]), "a or b");
         assert_eq!(crate::or_join::<&str>(&["a", "b", "c"]), "a, b, or c");
-        assert_eq!(crate::or_join::<&str>(&["a", "b", "c", "d", "e"]), "a, b, c, d, or e");
+        assert_eq!(
+            crate::or_join::<&str>(&["a", "b", "c", "d", "e"]),
+            "a, b, c, d, or e"
+        );
         assert_eq!(crate::and_join::<&str>(&[]), "");
         assert_eq!(crate::and_join::<&str>(&["a"]), "a");
         assert_eq!(crate::and_join::<&str>(&["a", "b"]), "a and b");
         assert_eq!(crate::and_join::<&str>(&["a", "b", "c"]), "a, b, and c");
-        assert_eq!(crate::and_join::<&str>(&["a", "b", "c", "d", "e"]), "a, b, c, d, and e");
+        assert_eq!(
+            crate::and_join::<&str>(&["a", "b", "c", "d", "e"]),
+            "a, b, c, d, and e"
+        );
     }
 }
