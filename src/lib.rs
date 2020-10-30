@@ -17,7 +17,8 @@ use unicode_segmentation::UnicodeSegmentation;
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::name("(Even),Olsson&Rogstadkjærnet?"), "Even Olsson Rogstadkjærnet");
+/// let s = "(Even),Olsson&Rogstadkjærnet?";
+/// assert_eq!(reword::name(s), "Even Olsson Rogstadkjærnet");
 /// ```
 pub fn name<T: AsRef<str>>(s: T) -> String {
     let s = s.as_ref();
@@ -37,7 +38,9 @@ pub fn name<T: AsRef<str>>(s: T) -> String {
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::name_with_limit("(Even),Olsson&Rogstadkjærnet?", 4), "EOR");
+/// let s = "(Even),Olsson&Rogstadkjærnet?";
+/// assert_eq!(reword::name_with_limit(s, 4), "EOR");
+/// assert_eq!(reword::name_with_limit(s, 25), "Even O Rogstadkjærnet");
 /// ```
 pub fn name_with_limit<T: AsRef<str>>(s: T, limit: usize) -> String {
     let s = s.as_ref();
@@ -57,12 +60,26 @@ pub fn name_with_limit<T: AsRef<str>>(s: T, limit: usize) -> String {
 
     let spaces = len - 1;
     let mut count = sum + spaces;
-    for (w, c) in name.iter_mut().zip(n).rev() {
+    let mut zip = name.iter_mut().zip(n);
+
+    // Pop off the first name, so we can check that last.
+    let head = zip.next();
+
+    // Checks if the words needs to be shortened, starting with the first middle name.
+    for (w, c) in zip {
         if count <= limit {
             break;
         }
         count -= c - 1;
         *w = w.graphemes(true).next().unwrap();
+    }
+
+    // Checks if the first name also needs to be shortened.
+    if let Some((w, c)) = head {
+        if count > limit {
+            count -= c - 1;
+            *w = w.graphemes(true).next().unwrap();
+        }
     }
 
     if count <= limit {
@@ -156,13 +173,26 @@ mod tests {
     fn name() {
         let s = "(Even), Olsson&Rogstadkjærnet?";
         assert_eq!(crate::name(s), "Even Olsson Rogstadkjærnet");
-        assert_eq!(crate::name_with_limit(s, 25), "Even Olsson R");
+        assert_eq!(crate::name_with_limit(s, 25), "Even O Rogstadkjærnet");
         assert_eq!(crate::name_with_limit(s, 12), "Even O R");
         assert_eq!(crate::name_with_limit(s, 7), "E O R");
         assert_eq!(crate::name_with_limit(s, 4), "EOR");
         assert_eq!(crate::name_with_limit(s, 2), "EO");
         assert_eq!(crate::name_with_limit(s, 1), "E");
         assert_eq!(crate::name_with_limit(s, 0), "");
+    }
+
+    #[test]
+    fn username() {
+        let s = "(Even), Olsson&Rogstadkjærnet?";
+        assert_eq!(crate::username(s), "evenolssonrogstadkjærnet");
+        assert_eq!(crate::username_with_limit(s, 25), "evenorogstadkjærnet");
+        assert_eq!(crate::username_with_limit(s, 12), "evenor");
+        assert_eq!(crate::username_with_limit(s, 7), "eor");
+        assert_eq!(crate::username_with_limit(s, 4), "eor");
+        assert_eq!(crate::username_with_limit(s, 2), "eo");
+        assert_eq!(crate::username_with_limit(s, 1), "e");
+        assert_eq!(crate::username_with_limit(s, 0), "");
     }
 
     #[test]
