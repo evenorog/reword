@@ -93,6 +93,8 @@ pub fn name_with_limit<T: AsRef<str>>(s: T, limit: usize) -> String {
 
 /// Creates a username from the provided string.
 ///
+/// A username can only consist of alphanumeric characters.
+///
 /// # Examples
 /// ```
 /// assert_eq!(reword::username("Even O. R."), "evenor");
@@ -100,13 +102,16 @@ pub fn name_with_limit<T: AsRef<str>>(s: T, limit: usize) -> String {
 pub fn username<T: AsRef<str>>(s: T) -> String {
     let s = s.as_ref();
     let mut username = String::with_capacity(s.len());
-    for w in s.unicode_words().map(str::to_lowercase) {
-        username.push_str(&w)
+    for c in s.chars().filter(char::is_ascii_alphanumeric) {
+        let c = c.to_ascii_lowercase();
+        username.push(c);
     }
     username
 }
 
 /// Creates a username from the provided string and limit.
+///
+/// A username can only consist of alphanumeric characters.
 ///
 /// # Examples
 /// ```
@@ -115,8 +120,9 @@ pub fn username<T: AsRef<str>>(s: T) -> String {
 pub fn username_with_limit<T: AsRef<str>>(s: T, limit: usize) -> String {
     let name = name_with_limit(s, limit);
     let mut username = String::with_capacity(name.len());
-    for w in name.to_lowercase().split(' ') {
-        username.push_str(&w)
+    for c in name.chars().filter(char::is_ascii_alphanumeric) {
+        let c = c.to_ascii_lowercase();
+        username.push(c)
     }
     username
 }
@@ -185,8 +191,8 @@ mod tests {
     #[test]
     fn username() {
         let s = "(Even), Olsson&Rogstadkjærnet?";
-        assert_eq!(crate::username(s), "evenolssonrogstadkjærnet");
-        assert_eq!(crate::username_with_limit(s, 25), "evenorogstadkjærnet");
+        assert_eq!(crate::username(s), "evenolssonrogstadkjrnet");
+        assert_eq!(crate::username_with_limit(s, 25), "evenorogstadkjrnet");
         assert_eq!(crate::username_with_limit(s, 12), "evenor");
         assert_eq!(crate::username_with_limit(s, 7), "eor");
         assert_eq!(crate::username_with_limit(s, 4), "eor");
