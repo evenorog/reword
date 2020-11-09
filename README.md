@@ -4,7 +4,7 @@
 [![Crates.io](https://img.shields.io/crates/v/reword.svg)](https://crates.io/crates/reword)
 [![Docs](https://docs.rs/reword/badge.svg)](https://docs.rs/reword)
 
-Provides functions for human readable formatting of words and sentences.
+Provides utility functions for human readable formatting of words and sentences.
 
 ```rust
 let s = "(Even),Olsson&Rogstadkjærnet?";
