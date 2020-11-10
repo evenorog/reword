@@ -10,6 +10,7 @@ Provides utility functions for human readable formatting of words and sentences.
 let s = "(Even),Olsson&Rogstadkjærnet?";
 assert_eq!(reword::name(s), "Even Olsson Rogstadkjærnet");
 assert_eq!(reword::name_with_limit(s, 4), "EOR");
+assert_eq!(reword::username_with_limit(s, 12), "evenor");
 ```
 
 ### License
