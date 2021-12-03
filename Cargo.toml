@@ -1,6 +1,6 @@
 [package]
 name = "reword"
-version = "6.2.0"
+version = "6.3.0"
 authors = ["evenorog <evenorog@gmail.com>"]
 description = "Provides utility functions for human readable formatting of words and sentences."
 documentation = "https://docs.rs/reword"
@@ -8,7 +8,7 @@ repository = "https://github.com/evenorog/reword"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 exclude = ["/.travis.yml"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 unicode-segmentation = "1"
