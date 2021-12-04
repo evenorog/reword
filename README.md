@@ -11,6 +11,7 @@ let s = "(Even),Olsson&Rogstadkjærnet?";
 assert_eq!(reword::name(s), "Even Olsson Rogstadkjærnet");
 assert_eq!(reword::name_with_limit(s, 4), "EOR");
 assert_eq!(reword::username_with_limit(s, 12), "evenor");
+assert_eq!(reword::camel_case(s), "evenOlssonRogstadkjærnet");
 ```
 
 ### License
