@@ -14,6 +14,8 @@ extern crate alloc;
 use alloc::{string::String, vec::Vec};
 use unicode_segmentation::UnicodeSegmentation;
 
+const PAT: &[char] = &['_', ' '];
+
 /// Formats the input string as a name.
 ///
 /// # Examples
@@ -118,6 +120,66 @@ pub fn username_with_limit<T: AsRef<str>>(t: T, limit: usize) -> String {
         .filter(char::is_ascii_alphanumeric)
         .map(|c| c.to_ascii_lowercase())
         .collect()
+}
+
+/// Formats the input string as a camel case name.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::camel_case("AGPL_3_0_or_later"), "agpl3_0OrLater");
+/// ```
+pub fn camel_case<T: AsRef<str>>(t: T) -> String {
+    name(t)
+        .trim_matches(PAT)
+        .split(PAT)
+        .filter(|t| !t.is_empty())
+        .enumerate()
+        .map(|(i, word)| to_camel_case(word, i != 0))
+        .fold(String::new(), fold_camel_case)
+}
+
+/// Formats the input string as a pascal case name.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::upper_camel_case("AGPL_3_0_or_later"), "Agpl3_0OrLater");
+/// ```
+pub fn upper_camel_case<T: AsRef<str>>(t: T) -> String {
+    name(t)
+        .trim_matches(PAT)
+        .split(PAT)
+        .filter(|t| !t.is_empty())
+        .map(|word| to_camel_case(word, true))
+        .fold(String::new(), fold_camel_case)
+}
+
+fn to_camel_case(word: &str, mut upper: bool) -> String {
+    let mut cc = String::new();
+    let mut prev_is_lowercase = false;
+
+    for c in word.chars() {
+        if upper {
+            cc.extend(c.to_uppercase());
+        } else {
+            cc.extend(c.to_lowercase());
+        }
+
+        upper = prev_is_lowercase && c.is_uppercase();
+        prev_is_lowercase = c.is_lowercase();
+    }
+
+    cc
+}
+
+fn fold_camel_case(mut acc: String, w: String) -> String {
+    let start_is_num = w.chars().next().map_or(false, char::is_numeric);
+    let end_is_num = acc.chars().last().map_or(false, char::is_numeric);
+    // Split with _ if two word boundaries are numeric.
+    if start_is_num && end_is_num {
+        acc.push('_');
+    }
+    acc.push_str(&w);
+    acc
 }
 
 /// Join the list with an 'or' before the last element of the list.
