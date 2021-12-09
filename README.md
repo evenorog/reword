@@ -7,11 +7,12 @@
 Provides utility functions for human readable formatting of words and sentences.
 
 ```rust
-let s = "(Even),Olsson&Rogstadkjærnet?";
-assert_eq!(reword::name(s), "Even Olsson Rogstadkjærnet");
-assert_eq!(reword::name_with_limit(s, 4), "EOR");
-assert_eq!(reword::username_with_limit(s, 12), "evenor");
-assert_eq!(reword::camel_case(s), "evenOlssonRogstadkjærnet");
+const S: &str = "(Even),Olsson&Rogstadkjærnet?";
+
+assert_eq!(reword::name(S), "Even Olsson Rogstadkjærnet");
+assert_eq!(reword::name_with_limit(S, 4), "EOR");
+assert_eq!(reword::username_with_limit(S, 12), "evenor");
+assert_eq!(reword::camel_case(S), "evenOlssonRogstadkjærnet");
 ```
 
 ### License

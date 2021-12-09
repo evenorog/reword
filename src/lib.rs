@@ -1,18 +1,20 @@
 //! Provides utility functions for human readable formatting of words and sentences.
 //!
 //! ```
-//! let s = "(Even),Olsson&Rogstadkjærnet?";
-//! assert_eq!(reword::name(s), "Even Olsson Rogstadkjærnet");
-//! assert_eq!(reword::name_with_limit(s, 4), "EOR");
-//! assert_eq!(reword::username_with_limit(s, 12), "evenor");
-//! assert_eq!(reword::camel_case(s), "evenOlssonRogstadkjærnet");
+//! const S: &str = "(Even),Olsson&Rogstadkjærnet?";
+//!
+//! assert_eq!(reword::name(S), "Even Olsson Rogstadkjærnet");
+//! assert_eq!(reword::name_with_limit(S, 4), "EOR");
+//! assert_eq!(reword::username_with_limit(S, 12), "evenor");
+//! assert_eq!(reword::camel_case(S), "evenOlssonRogstadkjærnet");
 //! ```
 
 #![no_std]
 
 extern crate alloc;
 
-use alloc::{string::String, vec::Vec};
+use alloc::string::String;
+use alloc::vec::Vec;
 use unicode_segmentation::UnicodeSegmentation;
 
 const PAT: &[char] = &['_', ' '];
@@ -123,14 +125,46 @@ pub fn username_with_limit<T: AsRef<str>>(t: T, limit: usize) -> String {
         .collect()
 }
 
+fn _snake_case<T: AsRef<str>>(_t: T) -> String {
+    unimplemented!()
+}
+
+fn _snake_case_with_limit<T: AsRef<str>>(_t: T, _limit: usize) -> String {
+    unimplemented!()
+}
+
+fn _screaming_snake_case<T: AsRef<str>>(_t: T) -> String {
+    unimplemented!()
+}
+
+fn _screaming_snake_case_with_limit<T: AsRef<str>>(_t: T, _limit: usize) -> String {
+    unimplemented!()
+}
+
 /// Formats the input string as a camel case name.
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::camel_case("AGPL_3_0_or_later"), "agpl3_0OrLater");
+/// assert_eq!(reword::camel_case("Even Olsson Rogstadkjærnet"), "evenOlssonRogstadkjærnet");
 /// ```
 pub fn camel_case<T: AsRef<str>>(t: T) -> String {
     name(t)
+        .trim_matches(PAT)
+        .split(PAT)
+        .filter(|t| !t.is_empty())
+        .enumerate()
+        .map(|(i, word)| to_camel_case(word, i != 0))
+        .fold(String::new(), fold_camel_case)
+}
+
+/// Formats the input string as a camel case name with a limit on the length.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::camel_case_with_limit("Even Olsson Rogstadkjærnet", 25), "evenORogstadkjærnet");
+/// ```
+pub fn camel_case_with_limit<T: AsRef<str>>(t: T, limit: usize) -> String {
+    name_with_limit(t, limit)
         .trim_matches(PAT)
         .split(PAT)
         .filter(|t| !t.is_empty())
@@ -143,10 +177,25 @@ pub fn camel_case<T: AsRef<str>>(t: T) -> String {
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::upper_camel_case("AGPL_3_0_or_later"), "Agpl3_0OrLater");
+/// assert_eq!(reword::upper_camel_case("Even Olsson Rogstadkjærnet"), "EvenOlssonRogstadkjærnet");
 /// ```
 pub fn upper_camel_case<T: AsRef<str>>(t: T) -> String {
     name(t)
+        .trim_matches(PAT)
+        .split(PAT)
+        .filter(|t| !t.is_empty())
+        .map(|word| to_camel_case(word, true))
+        .fold(String::new(), fold_camel_case)
+}
+
+/// Formats the input string as a pascal case name with a limit on the length.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::upper_camel_case_with_limit("Even Olsson Rogstadkjærnet", 25), "EvenORogstadkjærnet");
+/// ```
+pub fn upper_camel_case_with_limit<T: AsRef<str>>(t: T, limit: usize) -> String {
+    name_with_limit(t, limit)
         .trim_matches(PAT)
         .split(PAT)
         .filter(|t| !t.is_empty())
@@ -231,30 +280,30 @@ fn join<T: AsRef<str>>(v: &[T], sep: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    const S: &str = "(Even), Olsson&Rogstadkjærnet?";
+
     #[test]
     fn name() {
-        let t = "(Even), Olsson&Rogstadkjærnet?";
-        assert_eq!(crate::name(t), "Even Olsson Rogstadkjærnet");
-        assert_eq!(crate::name_with_limit(t, 25), "Even O Rogstadkjærnet");
-        assert_eq!(crate::name_with_limit(t, 12), "Even O R");
-        assert_eq!(crate::name_with_limit(t, 7), "E O R");
-        assert_eq!(crate::name_with_limit(t, 4), "EOR");
-        assert_eq!(crate::name_with_limit(t, 2), "EO");
-        assert_eq!(crate::name_with_limit(t, 1), "E");
-        assert_eq!(crate::name_with_limit(t, 0), "");
+        assert_eq!(crate::name(S), "Even Olsson Rogstadkjærnet");
+        assert_eq!(crate::name_with_limit(S, 25), "Even O Rogstadkjærnet");
+        assert_eq!(crate::name_with_limit(S, 12), "Even O R");
+        assert_eq!(crate::name_with_limit(S, 7), "E O R");
+        assert_eq!(crate::name_with_limit(S, 4), "EOR");
+        assert_eq!(crate::name_with_limit(S, 2), "EO");
+        assert_eq!(crate::name_with_limit(S, 1), "E");
+        assert_eq!(crate::name_with_limit(S, 0), "");
     }
 
     #[test]
     fn username() {
-        let t = "(Even), Olsson&Rogstadkjærnet?";
-        assert_eq!(crate::username(t), "evenolssonrogstadkjrnet");
-        assert_eq!(crate::username_with_limit(t, 25), "evenorogstadkjrnet");
-        assert_eq!(crate::username_with_limit(t, 12), "evenor");
-        assert_eq!(crate::username_with_limit(t, 7), "eor");
-        assert_eq!(crate::username_with_limit(t, 4), "eor");
-        assert_eq!(crate::username_with_limit(t, 2), "eo");
-        assert_eq!(crate::username_with_limit(t, 1), "e");
-        assert_eq!(crate::username_with_limit(t, 0), "");
+        assert_eq!(crate::username(S), "evenolssonrogstadkjrnet");
+        assert_eq!(crate::username_with_limit(S, 25), "evenorogstadkjrnet");
+        assert_eq!(crate::username_with_limit(S, 12), "evenor");
+        assert_eq!(crate::username_with_limit(S, 7), "eor");
+        assert_eq!(crate::username_with_limit(S, 4), "eor");
+        assert_eq!(crate::username_with_limit(S, 2), "eo");
+        assert_eq!(crate::username_with_limit(S, 1), "e");
+        assert_eq!(crate::username_with_limit(S, 0), "");
     }
 
     #[test]
@@ -275,5 +324,20 @@ mod tests {
             crate::and_join::<&str>(&["a", "b", "c", "d", "e"]),
             "a, b, c, d, and e"
         );
+    }
+
+    #[test]
+    fn camel_case() {
+        assert_eq!(crate::camel_case("AGPL_3_0_or_later"), "agpl3_0OrLater");
+        assert_eq!(crate::camel_case("MIT"), "mit");
+    }
+
+    #[test]
+    fn upper_camel_case() {
+        assert_eq!(
+            crate::upper_camel_case("AGPL_3_0_or_later"),
+            "Agpl3_0OrLater"
+        );
+        assert_eq!(crate::upper_camel_case("MIT"), "Mit");
     }
 }
