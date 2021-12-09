@@ -13,6 +13,7 @@ assert_eq!(reword::name(S), "Even Olsson Rogstadkjærnet");
 assert_eq!(reword::name_with_limit(S, 4), "EOR");
 assert_eq!(reword::username_with_limit(S, 12), "evenor");
 assert_eq!(reword::camel_case(S), "evenOlssonRogstadkjærnet");
+assert_eq!(reword::upper_camel_case_with_limit(S, 25), "EvenORogstadkjærnet");
 ```
 
 ### License
