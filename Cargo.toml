@@ -12,3 +12,6 @@ edition = "2021"
 
 [dependencies]
 unicode-segmentation = "1"
+
+[badges]
+maintenance = { status = "actively-developed" }
