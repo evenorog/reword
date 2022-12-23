@@ -7,7 +7,7 @@ documentation = "https://docs.rs/reword"
 repository = "https://github.com/evenorog/reword"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
-exclude = ["/.travis.yml"]
+categories = ["text-processing"]
 edition = "2021"
 
 [dependencies]
