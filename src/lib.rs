@@ -238,14 +238,14 @@ fn fold_camel_case(mut acc: String, w: String) -> String {
 /// # Examples
 /// ```
 /// assert_eq!(reword::or_join(&["a", "b"]), "a or b");
-/// assert_eq!(reword::or_join(&["a", "b", "c"]), "a, b, or c");
+/// assert_eq!(reword::or_join(&["a", "b", "c"]), "a, b or c");
 /// ```
-pub fn or_join<T: AsRef<str>>(v: &[T]) -> String {
-    if v.len() < 3 {
-        join(v, " or ")
-    } else {
-        join(v, ", or ")
-    }
+pub fn or_join<I>(iter: I) -> String
+where
+    I: IntoIterator,
+    I::Item: AsRef<str>,
+{
+    join(iter, " or ")
 }
 
 /// Join the list with an 'and' before the last element of the list.
@@ -253,29 +253,41 @@ pub fn or_join<T: AsRef<str>>(v: &[T]) -> String {
 /// # Examples
 /// ```
 /// assert_eq!(reword::and_join(&["a", "b"]), "a and b");
-/// assert_eq!(reword::and_join(&["a", "b", "c"]), "a, b, and c");
+/// assert_eq!(reword::and_join(&["a", "b", "c"]), "a, b and c");
 /// ```
-pub fn and_join<T: AsRef<str>>(v: &[T]) -> String {
-    if v.len() < 3 {
-        join(v, " and ")
-    } else {
-        join(v, ", and ")
-    }
+pub fn and_join<I>(iter: I) -> String
+where
+    I: IntoIterator,
+    I::Item: AsRef<str>,
+{
+    join(iter, " and ")
 }
 
-fn join<T: AsRef<str>>(v: &[T], sep: &str) -> String {
-    let mut s = String::with_capacity(v.len() * 16);
-    if let Some((first, tail)) = v.split_first() {
-        s.push_str(first.as_ref());
-        if let Some((last, tail)) = tail.split_last() {
-            for field in tail {
-                s.push_str(", ");
-                s.push_str(field.as_ref());
-            }
-            s.push_str(sep);
-            s.push_str(last.as_ref());
-        }
+fn join<I>(iter: I, sep: &str) -> String
+where
+    I: IntoIterator,
+    I::Item: AsRef<str>,
+{
+    let mut iter = iter.into_iter();
+    let Some(first) = iter.next() else {
+        return String::new();
+    };
+
+    let (lower, upper) = iter.size_hint();
+    let mut s = String::with_capacity(upper.unwrap_or(lower) * 16);
+    s.push_str(first.as_ref());
+    let Some(mut next) = iter.next() else {
+        return s;
+    };
+
+    for peek in iter {
+        s.push_str(", ");
+        s.push_str(next.as_ref());
+        next = peek;
     }
+
+    s.push_str(sep);
+    s.push_str(next.as_ref());
     s
 }
 
@@ -309,21 +321,21 @@ mod tests {
 
     #[test]
     fn join() {
-        assert_eq!(crate::or_join::<&str>(&[]), "");
-        assert_eq!(crate::or_join::<&str>(&["a"]), "a");
-        assert_eq!(crate::or_join::<&str>(&["a", "b"]), "a or b");
-        assert_eq!(crate::or_join::<&str>(&["a", "b", "c"]), "a, b, or c");
+        assert_eq!(crate::or_join::<&[&str]>(&[]), "");
+        assert_eq!(crate::or_join::<&[&str]>(&["a"]), "a");
+        assert_eq!(crate::or_join::<&[&str]>(&["a", "b"]), "a or b");
+        assert_eq!(crate::or_join::<&[&str]>(&["a", "b", "c"]), "a, b or c");
         assert_eq!(
-            crate::or_join::<&str>(&["a", "b", "c", "d", "e"]),
-            "a, b, c, d, or e"
+            crate::or_join::<&[&str]>(&["a", "b", "c", "d", "e"]),
+            "a, b, c, d or e"
         );
-        assert_eq!(crate::and_join::<&str>(&[]), "");
-        assert_eq!(crate::and_join::<&str>(&["a"]), "a");
-        assert_eq!(crate::and_join::<&str>(&["a", "b"]), "a and b");
-        assert_eq!(crate::and_join::<&str>(&["a", "b", "c"]), "a, b, and c");
+        assert_eq!(crate::and_join::<&[&str]>(&[]), "");
+        assert_eq!(crate::and_join::<&[&str]>(&["a"]), "a");
+        assert_eq!(crate::and_join::<&[&str]>(&["a", "b"]), "a and b");
+        assert_eq!(crate::and_join::<&[&str]>(&["a", "b", "c"]), "a, b and c");
         assert_eq!(
-            crate::and_join::<&str>(&["a", "b", "c", "d", "e"]),
-            "a, b, c, d, and e"
+            crate::and_join::<&[&str]>(&["a", "b", "c", "d", "e"]),
+            "a, b, c, d and e"
         );
     }
 
