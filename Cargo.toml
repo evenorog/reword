@@ -2,7 +2,7 @@
 name = "reword"
 version = "6.4.0"
 authors = ["evenorog <evenorog@gmail.com>"]
-description = "Provides utility functions for human readable formatting of words and sentences."
+description = "Provides some utility functions for human-readable formatting of words."
 documentation = "https://docs.rs/reword"
 repository = "https://github.com/evenorog/reword"
 readme = "README.md"

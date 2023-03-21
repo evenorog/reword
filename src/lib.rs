@@ -1,14 +1,4 @@
-//! Provides utility functions for human readable formatting of words and sentences.
-//!
-//! ```
-//! const S: &str = "(Even),Olsson&Rogstadkjærnet?";
-//!
-//! assert_eq!(reword::name(S), "Even Olsson Rogstadkjærnet");
-//! assert_eq!(reword::name_with_limit(S, 4), "EOR");
-//! assert_eq!(reword::username_with_limit(S, 12), "evenor");
-//! assert_eq!(reword::camel_case(S), "evenOlssonRogstadkjærnet");
-//! assert_eq!(reword::upper_camel_case_with_limit(S, 25), "EvenORogstadkjærnet");
-//! ```
+//! Provides some utility functions for human-readable formatting of words.
 
 #![no_std]
 
@@ -126,20 +116,60 @@ pub fn username_with_limit<T: AsRef<str>>(t: T, limit: usize) -> String {
         .collect()
 }
 
-fn _snake_case<T: AsRef<str>>(_t: T) -> String {
-    unimplemented!()
+/// Formats the input string as a snake case name.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::snake_case("Even Olsson Rogstadkjærnet"), "even_olsson_rogstadkjærnet");
+/// ```
+pub fn snake_case<T: AsRef<str>>(t: T) -> String {
+    name(t)
+        .split(PAT)
+        .filter(|t| !t.is_empty())
+        .map(str::to_lowercase)
+        .fold(String::new(), fold_snake_case)
 }
 
-fn _snake_case_with_limit<T: AsRef<str>>(_t: T, _limit: usize) -> String {
-    unimplemented!()
+/// Formats the input string as a snake case name and limits the length of the name.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::snake_case_with_limit("Even Olsson Rogstadkjærnet", 25), "even_o_rogstadkjærnet");
+/// ```
+pub fn snake_case_with_limit<T: AsRef<str>>(t: T, limit: usize) -> String {
+    name_with_limit(t, limit)
+        .split(PAT)
+        .filter(|t| !t.is_empty())
+        .map(str::to_lowercase)
+        .fold(String::new(), fold_snake_case)
 }
 
-fn _screaming_snake_case<T: AsRef<str>>(_t: T) -> String {
-    unimplemented!()
+/// Formats the input string as a screaming snake case name.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::screaming_snake_case("Even Olsson Rogstadkjærnet"), "EVEN_OLSSON_ROGSTADKJÆRNET");
+/// ```
+pub fn screaming_snake_case<T: AsRef<str>>(t: T) -> String {
+    name(t)
+        .split(PAT)
+        .filter(|t| !t.is_empty())
+        .map(str::to_uppercase)
+        .fold(String::new(), fold_snake_case)
 }
 
-fn _screaming_snake_case_with_limit<T: AsRef<str>>(_t: T, _limit: usize) -> String {
-    unimplemented!()
+/// Formats the input string as a screaming snake case name and limits the length of the name.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::screaming_snake_case_with_limit("Even Olsson Rogstadkjærnet", 25), "EVEN_O_ROGSTADKJÆRNET");
+/// ```
+pub fn screaming_snake_case_with_limit<T: AsRef<str>>(t: T, limit: usize) -> String {
+    name_with_limit(t, limit)
+        .split(PAT)
+        .filter(|t| !t.is_empty())
+        .map(str::to_uppercase)
+        .fold(String::new(), fold_snake_case)
 }
 
 /// Formats the input string as a camel case name.
@@ -178,9 +208,9 @@ pub fn camel_case_with_limit<T: AsRef<str>>(t: T, limit: usize) -> String {
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::upper_camel_case("Even Olsson Rogstadkjærnet"), "EvenOlssonRogstadkjærnet");
+/// assert_eq!(reword::pascal_case("Even Olsson Rogstadkjærnet"), "EvenOlssonRogstadkjærnet");
 /// ```
-pub fn upper_camel_case<T: AsRef<str>>(t: T) -> String {
+pub fn pascal_case<T: AsRef<str>>(t: T) -> String {
     name(t)
         .trim_matches(PAT)
         .split(PAT)
@@ -193,9 +223,9 @@ pub fn upper_camel_case<T: AsRef<str>>(t: T) -> String {
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::upper_camel_case_with_limit("Even Olsson Rogstadkjærnet", 25), "EvenORogstadkjærnet");
+/// assert_eq!(reword::pascal_case_with_limit("Even Olsson Rogstadkjærnet", 25), "EvenORogstadkjærnet");
 /// ```
-pub fn upper_camel_case_with_limit<T: AsRef<str>>(t: T, limit: usize) -> String {
+pub fn pascal_case_with_limit<T: AsRef<str>>(t: T, limit: usize) -> String {
     name_with_limit(t, limit)
         .trim_matches(PAT)
         .split(PAT)
@@ -220,6 +250,14 @@ fn to_camel_case(word: &str, mut upper: bool) -> String {
     }
 
     cc
+}
+
+fn fold_snake_case(mut acc: String, w: String) -> String {
+    if !acc.is_empty() {
+        acc.push('_');
+    }
+    acc.push_str(&w);
+    acc
 }
 
 fn fold_camel_case(mut acc: String, w: String) -> String {
@@ -346,11 +384,8 @@ mod tests {
     }
 
     #[test]
-    fn upper_camel_case() {
-        assert_eq!(
-            crate::upper_camel_case("AGPL_3_0_or_later"),
-            "Agpl3_0OrLater"
-        );
-        assert_eq!(crate::upper_camel_case("MIT"), "Mit");
+    fn pascal_case() {
+        assert_eq!(crate::pascal_case("AGPL_3_0_or_later"), "Agpl3_0OrLater");
+        assert_eq!(crate::pascal_case("MIT"), "Mit");
     }
 }
