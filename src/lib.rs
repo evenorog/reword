@@ -20,14 +20,9 @@ fn pat(c: char) -> bool {
 /// assert_eq!(reword::name(t), "Even Olsson Rogstadkjærnet");
 /// ```
 pub fn name<T: AsRef<str>>(t: T) -> String {
-    let mut it = t.as_ref().unicode_words();
-    it.next().map_or_else(String::default, |w| {
-        it.fold(String::from(w), |mut n, w| {
-            n.push(' ');
-            n.push_str(w);
-            n
-        })
-    })
+    t.as_ref()
+        .unicode_words()
+        .fold(String::new(), |acc, w| fold(acc, w, ' '))
 }
 
 /// Formats the input string as a name and limits the length of the name.
@@ -306,19 +301,19 @@ fn to_camel_case(word: &str, mut upper: bool) -> String {
     cc
 }
 
-fn fold_kebab_case(mut acc: String, w: String) -> String {
-    if !acc.is_empty() {
-        acc.push('-');
-    }
-    acc.push_str(&w);
-    acc
+fn fold_kebab_case(acc: String, w: String) -> String {
+    fold(acc, &w, '-')
 }
 
-fn fold_snake_case(mut acc: String, w: String) -> String {
+fn fold_snake_case(acc: String, w: String) -> String {
+    fold(acc, &w, '_')
+}
+
+fn fold(mut acc: String, w: &str, ch: char) -> String {
     if !acc.is_empty() {
-        acc.push('_');
+        acc.push(ch);
     }
-    acc.push_str(&w);
+    acc.push_str(w);
     acc
 }
 
