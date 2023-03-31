@@ -1,6 +1,6 @@
 [package]
 name = "reword"
-version = "6.4.0"
+version = "7.0.0"
 authors = ["evenorog <evenorog@gmail.com>"]
 description = "Provides some utility functions for human-readable formatting of words."
 documentation = "https://docs.rs/reword"

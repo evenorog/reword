@@ -340,7 +340,7 @@ where
     I: IntoIterator,
     I::Item: AsRef<str>,
 {
-    join(iter, " or ")
+    join(iter, ", ", " or ")
 }
 
 /// Join the list with an 'and' before the last element of the list.
@@ -355,10 +355,10 @@ where
     I: IntoIterator,
     I::Item: AsRef<str>,
 {
-    join(iter, " and ")
+    join(iter, ", ", " and ")
 }
 
-fn join<I>(iter: I, sep: &str) -> String
+fn join<I>(iter: I, mid_sep: &str, end_sep: &str) -> String
 where
     I: IntoIterator,
     I::Item: AsRef<str>,
@@ -376,12 +376,12 @@ where
     };
 
     for peek in iter {
-        s.push_str(", ");
+        s.push_str(mid_sep);
         s.push_str(next.as_ref());
         next = peek;
     }
 
-    s.push_str(sep);
+    s.push_str(end_sep);
     s.push_str(next.as_ref());
     s
 }
