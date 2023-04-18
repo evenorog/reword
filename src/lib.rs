@@ -369,21 +369,21 @@ where
     };
 
     let (lower, upper) = iter.size_hint();
-    let mut s = String::with_capacity(upper.unwrap_or(lower) * 16);
-    s.push_str(first.as_ref());
+    let mut string = String::with_capacity(upper.unwrap_or(lower) * 8);
+    string.push_str(first.as_ref());
     let Some(mut next) = iter.next() else {
-        return s;
+        return string;
     };
 
     for peek in iter {
-        s.push_str(mid_sep);
-        s.push_str(next.as_ref());
+        string.push_str(mid_sep);
+        string.push_str(next.as_ref());
         next = peek;
     }
 
-    s.push_str(end_sep);
-    s.push_str(next.as_ref());
-    s
+    string.push_str(end_sep);
+    string.push_str(next.as_ref());
+    string
 }
 
 #[cfg(test)]
