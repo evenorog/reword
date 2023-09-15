@@ -318,8 +318,8 @@ fn fold(mut acc: String, w: &str, ch: char) -> String {
 }
 
 fn fold_camel_case(mut acc: String, w: String) -> String {
-    let start_is_num = w.chars().next().map_or(false, char::is_numeric);
-    let end_is_num = acc.chars().last().map_or(false, char::is_numeric);
+    let start_is_num = matches!(w.chars().next(), Some(c) if c.is_numeric());
+    let end_is_num = matches!(acc.chars().last(), Some(c) if c.is_numeric());
     // Split with _ if two word boundaries are numeric.
     if start_is_num && end_is_num {
         acc.push('_');
