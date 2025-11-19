@@ -56,11 +56,11 @@ pub fn name_with_limit<T: AsRef<str>>(t: T, limit: usize) -> String {
     }
 
     // Checks if the first name also needs to be shortened.
-    if let Some((w, c)) = head {
-        if count > limit {
-            count -= c - 1;
-            *w = w.graphemes(true).next().unwrap();
-        }
+    if let Some((w, c)) = head
+        && count > limit
+    {
+        count -= c - 1;
+        *w = w.graphemes(true).next().unwrap();
     }
 
     if count <= limit {
