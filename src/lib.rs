@@ -7,10 +7,12 @@ extern crate alloc;
 mod case;
 mod join;
 mod name;
+mod units;
 
 pub use case::*;
 pub use join::*;
 pub use name::*;
+pub use units::*;
 
 use alloc::string::String;
 
