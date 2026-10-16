@@ -4,10 +4,10 @@ fn camel_case() {
     assert_eq!(reword::camel_case("this_is_a_test"), "thisIsATest");
     assert_eq!(reword::camel_case("  leading_spaces  "), "leadingSpaces");
     assert_eq!(reword::camel_case("trailing_spaces  "), "trailingSpaces");
-    // assert_eq!(
-    //     reword::camel_case("iNpUt_wiTh_MiXeD_cAsE"),
-    //     "inputWithMixedCase"
-    // );
+    assert_eq!(
+        reword::camel_case("iNpUt_wiTh_MiXeD_cAsE"),
+        "iNpUtWiThMiXeDCAsE"
+    );
     assert_eq!(reword::camel_case("this-is-an_example"), "thisIsAnExample");
     assert_eq!(reword::camel_case("camel+case*input"), "camelCaseInput");
     assert_eq!(
@@ -35,10 +35,10 @@ fn pascal_case() {
     assert_eq!(reword::pascal_case("this_is_a_test"), "ThisIsATest");
     assert_eq!(reword::pascal_case("  leading_spaces  "), "LeadingSpaces");
     assert_eq!(reword::pascal_case("trailing_spaces  "), "TrailingSpaces");
-    // assert_eq!(
-    //     reword::pascal_case("iNpUt_wiTh_MiXeD_cAsE"),
-    //     "InputWithMixedCase"
-    // );
+    assert_eq!(
+        reword::pascal_case("iNpUt_wiTh_MiXeD_cAsE"),
+        "INpUtWiThMiXeDCAsE"
+    );
     assert_eq!(reword::pascal_case("this-is-an_example"), "ThisIsAnExample");
     assert_eq!(reword::pascal_case("pascal+case*input"), "PascalCaseInput");
     assert_eq!(
@@ -68,7 +68,7 @@ fn snake_case() {
     assert_eq!(reword::snake_case("trailing_spaces  "), "trailing_spaces");
     assert_eq!(
         reword::snake_case("iNpUt_wiTh_MiXeD_cAsE"),
-        "input_with_mixed_case"
+        "i_np_ut_wi_th_mi_xe_d_c_as_e"
     );
     assert_eq!(
         reword::snake_case("this-is-an_example"),
@@ -111,7 +111,7 @@ fn screaming_snake_case() {
     );
     assert_eq!(
         reword::screaming_snake_case("iNpUt_wiTh_MiXeD_cAsE"),
-        "INPUT_WITH_MIXED_CASE"
+        "I_NP_UT_WI_TH_MI_XE_D_C_AS_E"
     );
     assert_eq!(
         reword::screaming_snake_case("this-is-an_example"),
@@ -151,7 +151,7 @@ fn kebab_case() {
     assert_eq!(reword::kebab_case("trailing_spaces  "), "trailing-spaces");
     assert_eq!(
         reword::kebab_case("iNpUt_wiTh_MiXeD_cAsE"),
-        "input-with-mixed-case"
+        "i-np-ut-wi-th-mi-xe-d-c-as-e"
     );
     assert_eq!(
         reword::kebab_case("this-is-an_example"),
@@ -194,7 +194,7 @@ fn screaming_kebab_case() {
     );
     assert_eq!(
         reword::screaming_kebab_case("iNpUt_wiTh_MiXeD_cAsE"),
-        "INPUT-WITH-MIXED-CASE"
+        "I-NP-UT-WI-TH-MI-XE-D-C-AS-E"
     );
     assert_eq!(
         reword::screaming_kebab_case("this-is-an_example"),
@@ -224,4 +224,72 @@ fn screaming_kebab_case() {
         "JSON-API-RESPONSE"
     );
     assert_eq!(reword::screaming_kebab_case("!@#$%^&*()"), "");
+}
+
+#[test]
+fn word_boundaries_and_unicode() {
+    // Expected values are in kebab, screaming kebab, snake, screaming snake,
+    // camel, and Pascal order. These cases capture the behavior changes in v8.
+    let cases = [
+        (
+            "helloWorld",
+            [
+                "hello-world",
+                "HELLO-WORLD",
+                "hello_world",
+                "HELLO_WORLD",
+                "helloWorld",
+                "HelloWorld",
+            ],
+        ),
+        (
+            "XMLHttpRequest",
+            [
+                "xml-http-request",
+                "XML-HTTP-REQUEST",
+                "xml_http_request",
+                "XML_HTTP_REQUEST",
+                "xmlHttpRequest",
+                "XmlHttpRequest",
+            ],
+        ),
+        (
+            "MixedUP CamelCase",
+            [
+                "mixed-up-camel-case",
+                "MIXED-UP-CAMEL-CASE",
+                "mixed_up_camel_case",
+                "MIXED_UP_CAMEL_CASE",
+                "mixedUpCamelCase",
+                "MixedUpCamelCase",
+            ],
+        ),
+        ("1 2", ["1-2", "1-2", "1_2", "1_2", "12", "12"]),
+        ("ΟΣ", ["ος", "ΟΣ", "ος", "ΟΣ", "ος", "Ος"]),
+        (
+            "O’Connor",
+            [
+                "o-connor", "O-CONNOR", "o_connor", "O_CONNOR", "oConnor", "OConnor",
+            ],
+        ),
+        (
+            "e\u{301}clair",
+            [
+                "e-clair", "E-CLAIR", "e_clair", "E_CLAIR", "eClair", "EClair",
+            ],
+        ),
+        ("漢字", ["漢字", "漢字", "漢字", "漢字", "漢字", "漢字"]),
+    ];
+
+    for (input, expected) in cases {
+        let actual = [
+            reword::kebab_case(input),
+            reword::screaming_kebab_case(input),
+            reword::snake_case(input),
+            reword::screaming_snake_case(input),
+            reword::camel_case(input),
+            reword::pascal_case(input),
+        ];
+        assert_eq!(actual, expected, "input: {input:?}");
+    }
 }

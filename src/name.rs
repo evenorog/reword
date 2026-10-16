@@ -1,6 +1,7 @@
 use crate::fold;
 use alloc::string::String;
 use alloc::vec::Vec;
+use unicode_normalization::UnicodeNormalization;
 use unicode_segmentation::UnicodeSegmentation;
 
 /// Formats the input string as a name.
@@ -16,15 +17,31 @@ pub fn name<T: AsRef<str>>(t: T) -> String {
         .fold(String::new(), |acc, w| fold(acc, w, ' '))
 }
 
-/// Formats the input string as a name and limits the length of the name.
+/// Abbreviates a name to at most `max_graphemes` extended grapheme clusters.
+///
+/// Extracts words using the same rules as [`name`]. Words after the first are
+/// shortened to their first grapheme, from left to right, followed by the first
+/// word if necessary. If the initials still do not fit with spaces, the spaces
+/// are removed, then trailing initials are discarded as needed.
+///
+/// Spaces count toward the limit. This limits grapheme clusters, not UTF-8 bytes
+/// or display width. A zero limit or an input without words returns an empty
+/// string. Formatting the result again may change its length.
 ///
 /// # Examples
 /// ```
 /// let t = "(Even),Olsson&Rogstadkjærnet?";
-/// assert_eq!(reword::name_with_limit(t, 4), "EOR");
-/// assert_eq!(reword::name_with_limit(t, 25), "Even O Rogstadkjærnet");
+/// assert_eq!(reword::abbreviate_name(t, 4), "EOR");
+/// assert_eq!(reword::abbreviate_name(t, 25), "Even O Rogstadkjærnet");
+///
+/// let short_name = reword::abbreviate_name(t, 25);
+/// assert_eq!(reword::snake_case(&short_name), "even_o_rogstadkjærnet");
 /// ```
-pub fn name_with_limit<T: AsRef<str>>(t: T, limit: usize) -> String {
+pub fn abbreviate_name<T: AsRef<str>>(t: T, max_graphemes: usize) -> String {
+    if max_graphemes == 0 {
+        return String::new();
+    }
+
     let mut name: Vec<&str> = t.as_ref().unicode_words().collect();
     if name.is_empty() {
         return String::new();
@@ -48,7 +65,7 @@ pub fn name_with_limit<T: AsRef<str>>(t: T, limit: usize) -> String {
 
     // Checks if the words needs to be shortened, starting with the first middle name.
     for (w, c) in zip {
-        if count <= limit {
+        if count <= max_graphemes {
             break;
         }
         count -= c - 1;
@@ -57,49 +74,51 @@ pub fn name_with_limit<T: AsRef<str>>(t: T, limit: usize) -> String {
 
     // Checks if the first name also needs to be shortened.
     if let Some((w, c)) = head
-        && count > limit
+        && count > max_graphemes
     {
         count -= c - 1;
         *w = w.graphemes(true).next().unwrap();
     }
 
-    if count <= limit {
+    if count <= max_graphemes {
         name.join(" ")
-    } else if (count - spaces) <= limit {
+    } else if (count - spaces) <= max_graphemes {
         name.concat()
     } else {
-        name[..limit].concat()
+        name[..max_graphemes].concat()
     }
 }
 
-/// Creates a username from the provided string.
+/// Creates a lowercase Unicode username candidate from the provided string.
 ///
-/// A username can only consist of alphanumeric characters.
+/// Applies locale-independent Unicode lowercasing and NFC normalization, then
+/// removes characters for which [`char::is_alphanumeric`] returns false. The
+/// result is normalized to NFC again after filtering.
+///
+/// Accented letters and non-Latin scripts are retained; the result is not
+/// transliterated to ASCII. Spaces, punctuation, and non-alphanumeric combining
+/// marks that could not be composed are removed. The result can be empty, has no
+/// length limit, and is not checked for uniqueness or service-specific rules.
 ///
 /// # Examples
 /// ```
 /// assert_eq!(reword::username("Even Olsson Rogstadkjærnet"), "evenolssonrogstadkjærnet");
+/// assert_eq!(reword::username("Jose\u{301}"), "josé");
+/// assert_eq!(reword::username("İ"), "i");
+/// assert_eq!(reword::username("🦀!"), "");
 /// ```
 pub fn username<T: AsRef<str>>(t: T) -> String {
-    name(t)
-        .chars()
-        .filter(|c| c.is_alphanumeric())
-        .flat_map(|c| c.to_lowercase())
-        .collect()
-}
+    let input = t.as_ref();
+    if input.is_ascii() {
+        let mut username = input.to_ascii_lowercase();
+        username.retain(|c| c.is_ascii_alphanumeric());
+        return username;
+    }
 
-/// Creates a username from the provided string and limit.
-///
-/// A username can only consist of alphanumeric characters.
-///
-/// # Examples
-/// ```
-/// assert_eq!(reword::username_with_limit("Even Olsson Rogstadkjærnet", 25), "evenorogstadkjærnet");
-/// ```
-pub fn username_with_limit<T: AsRef<str>>(t: T, limit: usize) -> String {
-    name_with_limit(t, limit)
-        .chars()
+    input
+        .to_lowercase()
+        .nfc()
         .filter(|c| c.is_alphanumeric())
-        .flat_map(|c| c.to_lowercase())
+        .nfc()
         .collect()
 }
