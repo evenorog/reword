@@ -1,4 +1,4 @@
-use crate::fold;
+use crate::{fold, transliteration::transliterated_ascii};
 use alloc::string::String;
 use alloc::vec::Vec;
 use unicode_normalization::UnicodeNormalization;
@@ -99,6 +99,7 @@ pub fn abbreviate_name<T: AsRef<str>>(t: T, max_graphemes: usize) -> String {
 /// transliterated to ASCII. Spaces, punctuation, and non-alphanumeric combining
 /// marks that could not be composed are removed. The result can be empty, has no
 /// length limit, and is not checked for uniqueness or service-specific rules.
+/// Use [`username_ascii`] to transliterate letters to ASCII instead.
 ///
 /// # Examples
 /// ```
@@ -121,4 +122,34 @@ pub fn username<T: AsRef<str>>(t: T) -> String {
         .filter(|c| c.is_alphanumeric())
         .nfc()
         .collect()
+}
+
+/// Creates a lowercase ASCII username candidate by transliterating Unicode.
+///
+/// Normalizes the input to NFC, then transliterates each character using
+/// [`deunicode::deunicode_char`]. Retains only ASCII letters and digits, with
+/// letters converted to lowercase. Spaces, punctuation, and characters without
+/// a mapping are removed. The mappings are not language-specific; some symbols
+/// and emoji map to words, which are retained.
+///
+/// The result can be empty, has no length limit, and is not checked for
+/// uniqueness or service-specific rules. Use [`username`] to preserve Unicode
+/// letters instead.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::username_ascii("Søren Weiß"), "sorenweiss");
+/// assert_eq!(reword::username_ascii("Jose\u{301}"), "jose");
+/// assert_eq!(reword::username_ascii("(O'Connor)_99"), "oconnor99");
+/// assert_eq!(reword::username_ascii("🦄!"), "unicorn");
+/// ```
+pub fn username_ascii<T: AsRef<str>>(t: T) -> String {
+    let input = t.as_ref();
+    let mut output = String::with_capacity(input.len());
+    output.extend(
+        transliterated_ascii(input)
+            .filter(u8::is_ascii_alphanumeric)
+            .map(|byte| char::from(byte.to_ascii_lowercase())),
+    );
+    output
 }

@@ -1,4 +1,4 @@
-use unicode_normalization::is_nfc;
+use unicode_normalization::{UnicodeNormalization, is_nfc};
 use unicode_segmentation::UnicodeSegmentation;
 
 const S: &str = "(Even), Olsson&Rogstadkjærnet?";
@@ -126,6 +126,88 @@ fn username_contract() {
             );
             assert!(is_nfc(&output), "input: {input:?}");
             assert_eq!(reword::username(&output), output, "input: {input:?}");
+        }
+    }
+}
+
+#[test]
+fn username_ascii() {
+    assert_eq!(reword::username_ascii(S), "evenolssonrogstadkjaernet");
+    for (input, expected) in [
+        ("", ""),
+        (" -_ !", ""),
+        ("\u{301}", ""),
+        ("(O'Connor)_99", "oconnor99"),
+        ("USER\n123", "user123"),
+        ("helloWorld", "helloworld"),
+        ("İSTANBUL", "istanbul"),
+        ("José", "jose"),
+        ("Jose\u{301}", "jose"),
+        ("Søren Weiß", "sorenweiss"),
+        ("Æneid", "aeneid"),
+        ("ﬁ", "fi"),
+        ("１２３", "123"),
+        ("北亰", "beijing"),
+        ("🦄!", "unicorn"),
+        ("foo\u{10ffff}bar", "foobar"),
+        ("foo\u{200d}bar", "foobar"),
+    ] {
+        assert_eq!(reword::username_ascii(input), expected, "input: {input:?}");
+    }
+    assert_eq!(reword::username_ascii(String::from("Jane Doe")), "janedoe");
+}
+
+#[test]
+fn ascii_usernames_normalize_canonically_equivalent_input() {
+    for input in ["Crème brûlée", "Ångström", "İstanbul", "Καλημέρα κόσμε"] {
+        let decomposed: String = input.nfd().collect();
+        assert_eq!(
+            reword::username_ascii(input),
+            reword::username_ascii(decomposed)
+        );
+    }
+}
+
+#[test]
+fn ascii_usernames_match_unicode_usernames_for_ascii_input() {
+    let input: String = (0..=127).map(char::from).collect();
+    assert_eq!(reword::username_ascii(&input), reword::username(&input));
+}
+
+#[test]
+fn ascii_usernames_are_lowercase_alphanumeric_and_idempotent() {
+    let parts = [
+        "",
+        "USER",
+        "Jane Doe",
+        "José",
+        "Jose\u{301}",
+        "ÆØß",
+        "北亰",
+        "İ",
+        "ΟΣ",
+        "ﬁ",
+        "123",
+        "_",
+        "-",
+        " ",
+        "\n",
+        "🦄☣",
+        "\u{301}",
+        "\u{10ffff}",
+        "\u{200d}",
+    ];
+    for left in parts {
+        for right in parts {
+            let input = format!("{left}{right}");
+            let output = reword::username_ascii(&input);
+            assert!(
+                output
+                    .bytes()
+                    .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit()),
+                "input: {input:?}"
+            );
+            assert_eq!(reword::username_ascii(&output), output, "input: {input:?}");
         }
     }
 }

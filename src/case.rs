@@ -7,7 +7,7 @@ use heck::{
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::kebab_case("Even Olsson Rogstadkjærnet"), "even-olsson-rogstadkjærnet");
+/// assert_eq!(reword::kebab_case("hello world"), "hello-world");
 /// ```
 pub fn kebab_case<T: AsRef<str>>(t: T) -> String {
     t.as_ref().to_kebab_case()
@@ -17,7 +17,7 @@ pub fn kebab_case<T: AsRef<str>>(t: T) -> String {
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::screaming_kebab_case("Even Olsson Rogstadkjærnet"), "EVEN-OLSSON-ROGSTADKJÆRNET");
+/// assert_eq!(reword::screaming_kebab_case("hello world"), "HELLO-WORLD");
 /// ```
 pub fn screaming_kebab_case<T: AsRef<str>>(t: T) -> String {
     t.as_ref().to_shouty_kebab_case()
@@ -27,7 +27,7 @@ pub fn screaming_kebab_case<T: AsRef<str>>(t: T) -> String {
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::snake_case("Even Olsson Rogstadkjærnet"), "even_olsson_rogstadkjærnet");
+/// assert_eq!(reword::snake_case("hello world"), "hello_world");
 /// ```
 pub fn snake_case<T: AsRef<str>>(t: T) -> String {
     t.as_ref().to_snake_case()
@@ -37,7 +37,7 @@ pub fn snake_case<T: AsRef<str>>(t: T) -> String {
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::screaming_snake_case("Even Olsson Rogstadkjærnet"), "EVEN_OLSSON_ROGSTADKJÆRNET");
+/// assert_eq!(reword::screaming_snake_case("hello world"), "HELLO_WORLD");
 /// ```
 pub fn screaming_snake_case<T: AsRef<str>>(t: T) -> String {
     t.as_ref().to_shouty_snake_case()
@@ -47,7 +47,7 @@ pub fn screaming_snake_case<T: AsRef<str>>(t: T) -> String {
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::camel_case("Even Olsson Rogstadkjærnet"), "evenOlssonRogstadkjærnet");
+/// assert_eq!(reword::camel_case("hello world"), "helloWorld");
 /// ```
 pub fn camel_case<T: AsRef<str>>(t: T) -> String {
     t.as_ref().to_lower_camel_case()
@@ -57,7 +57,7 @@ pub fn camel_case<T: AsRef<str>>(t: T) -> String {
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::pascal_case("Even Olsson Rogstadkjærnet"), "EvenOlssonRogstadkjærnet");
+/// assert_eq!(reword::pascal_case("hello world"), "HelloWorld");
 /// ```
 pub fn pascal_case<T: AsRef<str>>(t: T) -> String {
     t.as_ref().to_pascal_case()
