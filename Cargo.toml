@@ -1,6 +1,6 @@
 [package]
 name = "reword"
-version = "7.0.1"
+version = "8.0.0"
 authors = ["evenorog <evenorog@gmail.com>"]
 description = "Provides some utility functions for human-readable formatting of words."
 documentation = "https://docs.rs/reword"
@@ -11,6 +11,8 @@ categories = ["text-processing"]
 edition = "2024"
 
 [dependencies]
+heck = "0.5"
+unicode-normalization = { version = "0.1", default-features = false }
 unicode-segmentation = "1"
 
 [badges]
