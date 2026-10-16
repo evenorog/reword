@@ -4,7 +4,9 @@
 //! Use [`abbreviate_name`] to shorten a name to a maximum number of grapheme
 //! clusters. Abbreviation can be composed with case conversion or [`username`];
 //! those subsequent operations may change the output length.
-//! The [`units`] module formats byte counts, numbers, and elapsed seconds.
+//! Use [`truncate`] for an allocation-free prefix limited by grapheme count.
+//! The [`units`] module formats byte counts, numbers, percentages, rates, and
+//! elapsed time.
 
 #![no_std]
 
@@ -13,11 +15,13 @@ extern crate alloc;
 mod case;
 mod join;
 mod name;
+mod text;
 pub mod units;
 
 pub use case::*;
 pub use join::*;
 pub use name::*;
+pub use text::*;
 pub use units::*;
 
 use alloc::string::String;

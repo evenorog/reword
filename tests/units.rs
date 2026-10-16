@@ -222,4 +222,80 @@ fn module_helpers_are_available_at_the_crate_root() {
     assert_eq!(reword::number(1234), "1,234");
     assert_eq!(reword::number_short(1500.0), "1.5K");
     assert_eq!(reword::duration(60), "1m 0s");
+    assert_eq!(
+        reword::duration_short(core::time::Duration::from_millis(1250)),
+        "1.25 s"
+    );
+    assert_eq!(reword::percent(0.125), "12.5%");
+    assert_eq!(reword::bytes_per_second(1536), "1.5 KiB/s");
+    assert_eq!(reword::bytes_per_second_decimal(1500), "1.5 kB/s");
+}
+
+#[test]
+fn percentages() {
+    for (ratio, expected) in [
+        (0.0, "0%"),
+        (-0.0, "-0%"),
+        (0.125, "12.5%"),
+        (1.0, "100%"),
+        (-0.25, "-25%"),
+        (1.5, "150%"),
+        (0.123456, "12.3%"),
+        (0.1239, "12.4%"),
+        (0.9999, "100%"),
+        (0.001, "0.1%"),
+        (0.0001, "0%"),
+        (-0.0001, "-0%"),
+        (f64::from_bits(1), "0%"),
+    ] {
+        assert_eq!(units::percent(ratio), expected, "ratio: {ratio}");
+    }
+    for ratio in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+        assert_eq!(units::percent(ratio), format!("{ratio}%"));
+    }
+    // A finite ratio must not turn into infinity when scaled by 100.
+    assert_eq!(units::percent(f64::MAX), format!("{:.0}00%", f64::MAX));
+    assert_eq!(units::percent(-f64::MAX), format!("{:.0}00%", -f64::MAX));
+}
+
+#[test]
+fn byte_rates() {
+    assert_eq!(units::bytes_per_second(0), "0 B/s");
+    assert_eq!(units::bytes_per_second(1023), "1023 B/s");
+    assert_eq!(units::bytes_per_second(1536), "1.5 KiB/s");
+    assert_eq!(units::bytes_per_second(1_048_525), "1.0 MiB/s");
+    assert_eq!(units::bytes_per_second(u64::MAX), "16.0 EiB/s");
+    assert_eq!(units::bytes_per_second_decimal(0), "0 B/s");
+    assert_eq!(units::bytes_per_second_decimal(1500), "1.5 kB/s");
+    assert_eq!(units::bytes_per_second_decimal(999_950), "1.0 MB/s");
+    assert_eq!(units::bytes_per_second_decimal(u64::MAX), "18.4 EB/s");
+}
+
+#[test]
+fn compact_durations() {
+    use core::time::Duration;
+    for (value, expected) in [
+        (Duration::ZERO, "0s"),
+        (Duration::from_nanos(1), "1 ns"),
+        (Duration::from_nanos(850), "850 ns"),
+        (Duration::from_nanos(999), "999 ns"),
+        (Duration::from_micros(1), "1 µs"),
+        (Duration::from_nanos(1250), "1.25 µs"),
+        (Duration::from_nanos(999_999), "999.999 µs"),
+        (Duration::from_millis(1), "1 ms"),
+        (Duration::from_micros(1200), "1.2 ms"),
+        (Duration::from_nanos(999_999_499), "999.999 ms"),
+        (Duration::from_nanos(999_999_500), "1 s"),
+        (Duration::from_millis(1250), "1.25 s"),
+        (Duration::from_secs(59), "59 s"),
+        (Duration::from_nanos(59_999_499_999), "59.999 s"),
+        (Duration::from_nanos(59_999_500_000), "1 m"),
+        (Duration::from_secs(90), "1.5 m"),
+        (Duration::new(3599, 999_999_999), "1 h"),
+        (Duration::from_secs(3661), "1.017 h"),
+        (Duration::from_secs(86_400), "1 d"),
+        (Duration::MAX, "213503982334601.292 d"),
+    ] {
+        assert_eq!(units::duration_short(value), expected, "value: {value:?}");
+    }
 }

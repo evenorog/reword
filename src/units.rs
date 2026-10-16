@@ -1,13 +1,16 @@
-//! Human-readable byte counts, numbers, and elapsed seconds.
+//! Human-readable byte counts, numbers, percentages, rates, and elapsed time.
 //!
 //! All helpers return [`String`] and use fixed, locale-independent conventions.
 //! [`bytes`] uses binary IEC prefixes; [`bytes_decimal`] uses decimal SI prefixes.
 //! [`number`] groups decimal digits with commas, while [`number_short`] uses
 //! English suffixes for thousands, millions, billions, and trillions.
+//! [`duration`] formats whole seconds as components; [`duration_short`] accepts
+//! a [`Duration`] and chooses a single unit including subsecond units.
 
 use alloc::format;
 use alloc::string::{String, ToString};
 use core::fmt::{Display, Write};
+use core::time::Duration;
 
 /// Formats a byte count using powers of 1024: B, KiB, MiB, GiB, TiB, PiB, EiB.
 ///
@@ -39,6 +42,37 @@ pub fn bytes(n: u64) -> String {
 /// ```
 pub fn bytes_decimal(n: u64) -> String {
     format_bytes(n, 1000, &["B", "kB", "MB", "GB", "TB", "PB", "EB"])
+}
+
+/// Formats a whole-byte-per-second rate using the binary units of [`bytes`].
+///
+/// The input is already a rate in bytes per second, not a transferred byte count.
+/// Uses [`bytes`]'s rounding rules and appends `/s`.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::units::bytes_per_second(1536), "1.5 KiB/s");
+/// assert_eq!(reword::units::bytes_per_second(0), "0 B/s");
+/// ```
+pub fn bytes_per_second(n: u64) -> String {
+    let mut output = bytes(n);
+    output.push_str("/s");
+    output
+}
+
+/// Formats a whole-byte-per-second rate using the decimal units of [`bytes_decimal`].
+///
+/// The input is already a rate in bytes per second. Uses [`bytes_decimal`]'s
+/// rounding rules and appends `/s`.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::units::bytes_per_second_decimal(1500), "1.5 kB/s");
+/// ```
+pub fn bytes_per_second_decimal(n: u64) -> String {
+    let mut output = bytes_decimal(n);
+    output.push_str("/s");
+    output
 }
 
 fn format_bytes(n: u64, base: u64, units: &[&str; 7]) -> String {
@@ -192,6 +226,43 @@ pub fn number_short(n: f64) -> String {
     output
 }
 
+/// Formats a ratio as a percentage, rounded to at most one decimal place.
+///
+/// An input of `1.0` represents 100%. Negative values and values above 100% are
+/// supported without clamping. A trailing `.0` is omitted; negative zero retains
+/// its sign. `NaN` and infinities use their normal representations plus `%`.
+/// Rounding follows Rust's floating-point formatting.
+///
+/// # Examples
+/// ```
+/// assert_eq!(reword::units::percent(0.125), "12.5%");
+/// assert_eq!(reword::units::percent(1.0), "100%");
+/// assert_eq!(reword::units::percent(-0.25), "-25%");
+/// ```
+pub fn percent(ratio: f64) -> String {
+    if !ratio.is_finite() {
+        return format!("{ratio}%");
+    }
+
+    // Three decimal places in the ratio correspond to one in the percentage.
+    // Moving the decimal point in text avoids overflowing ratio * 100.
+    let mut output = format!("{ratio:.3}");
+    let mut point = output.len() - 4;
+    output.remove(point);
+    point += 2;
+    output.insert(point, '.');
+    let start = usize::from(output.starts_with('-'));
+    while point > start + 1 && output.as_bytes()[start] == b'0' {
+        output.remove(start);
+        point -= 1;
+    }
+    if output.ends_with(".0") {
+        output.truncate(output.len() - 2);
+    }
+    output.push('%');
+    output
+}
+
 /// Formats whole elapsed seconds as days, hours, minutes, and seconds.
 ///
 /// A day is exactly 86,400 seconds. All components from the largest nonzero
@@ -224,5 +295,66 @@ pub fn duration(seconds: u64) -> String {
         write!(output, "{seconds}s")
     }
     .expect("writing to a String cannot fail");
+    output
+}
+
+/// Formats a [`Duration`] using a single suitable unit: ns, µs, ms, s, m, h, d.
+///
+/// Keeps at most three fractional digits, omitting trailing zeros. Values are
+/// rounded to the nearest thousandth of the chosen unit, with halves rounded
+/// up. A result that rounds to the next unit is promoted to that unit.
+/// Zero is `"0s"`; all [`Duration`] values are supported using integer arithmetic.
+///
+/// This compact representation is approximate. Use [`duration`] for whole-second
+/// day/hour/minute/second components instead of a single scaled unit.
+///
+/// # Examples
+/// ```
+/// use core::time::Duration;
+///
+/// assert_eq!(reword::units::duration_short(Duration::from_nanos(850)), "850 ns");
+/// assert_eq!(reword::units::duration_short(Duration::from_micros(1200)), "1.2 ms");
+/// assert_eq!(reword::units::duration_short(Duration::from_millis(1250)), "1.25 s");
+/// assert_eq!(reword::units::duration_short(Duration::from_secs(90)), "1.5 m");
+/// ```
+pub fn duration_short(value: Duration) -> String {
+    let nanos = value.as_nanos();
+    if nanos == 0 {
+        return "0s".into();
+    }
+
+    const DIVISORS: [u128; 7] = [
+        1,
+        1000,
+        1_000_000,
+        1_000_000_000,
+        60_000_000_000,
+        3_600_000_000_000,
+        86_400_000_000_000,
+    ];
+    const UNITS: [&str; 7] = ["ns", "µs", "ms", "s", "m", "h", "d"];
+    let mut unit = 0;
+    while unit < DIVISORS.len() - 1 && nanos >= DIVISORS[unit + 1] {
+        unit += 1;
+    }
+
+    let round_thousandths = |unit: usize| (nanos * 1000 + DIVISORS[unit] / 2) / DIVISORS[unit];
+    let mut thousandths = round_thousandths(unit);
+    if unit < DIVISORS.len() - 1 && thousandths >= (DIVISORS[unit + 1] / DIVISORS[unit]) * 1000 {
+        unit += 1;
+        thousandths = round_thousandths(unit);
+    }
+
+    let mut output = String::with_capacity(32);
+    write!(output, "{}", thousandths / 1000).expect("writing to a String cannot fail");
+    let fraction = thousandths % 1000;
+    if fraction != 0 {
+        write!(output, ".{fraction:03}").expect("writing to a String cannot fail");
+        while output.ends_with('0') {
+            output.pop();
+        }
+    }
+    output.push(' ');
+    output.push_str(UNITS[unit]);
     output
 }
