@@ -5,8 +5,9 @@
 //! clusters. Abbreviation can be composed with case conversion or [`username`];
 //! those subsequent operations may change the output length.
 //! Use [`truncate`] for an allocation-free prefix limited by grapheme count.
-//! The [`units`] module formats byte counts, numbers, percentages, rates, and
-//! elapsed time.
+//! Format byte counts with [`bytes`], numbers with [`number`], percentages with
+//! [`percent`], rates with [`bytes_per_second`], and elapsed time with
+//! [`duration_short`].
 
 #![no_std]
 
@@ -16,7 +17,7 @@ mod case;
 mod join;
 mod name;
 mod text;
-pub mod units;
+mod units;
 
 pub use case::*;
 pub use join::*;

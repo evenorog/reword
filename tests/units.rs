@@ -1,5 +1,3 @@
-use reword::units;
-
 #[test]
 fn binary_bytes() {
     for (input, expected) in [
@@ -12,14 +10,14 @@ fn binary_bytes() {
         (1_048_525, "1.0 MiB"),
         (u64::MAX, "16.0 EiB"),
     ] {
-        assert_eq!(units::bytes(input), expected, "input: {input}");
+        assert_eq!(reword::bytes(input), expected, "input: {input}");
     }
     for (power, suffix) in ["KiB", "MiB", "GiB", "TiB", "PiB", "EiB"]
         .into_iter()
         .enumerate()
     {
         let input = 1024_u64.pow(power as u32 + 1);
-        assert_eq!(units::bytes(input), format!("1.0 {suffix}"));
+        assert_eq!(reword::bytes(input), format!("1.0 {suffix}"));
     }
 }
 
@@ -35,11 +33,11 @@ fn decimal_bytes() {
         (999_950, "1.0 MB"),
         (u64::MAX, "18.4 EB"),
     ] {
-        assert_eq!(units::bytes_decimal(input), expected, "input: {input}");
+        assert_eq!(reword::bytes_decimal(input), expected, "input: {input}");
     }
     for (power, suffix) in ["kB", "MB", "GB", "TB", "PB", "EB"].into_iter().enumerate() {
         let input = 1000_u64.pow(power as u32 + 1);
-        assert_eq!(units::bytes_decimal(input), format!("1.0 {suffix}"));
+        assert_eq!(reword::bytes_decimal(input), format!("1.0 {suffix}"));
     }
 }
 
@@ -48,12 +46,12 @@ fn byte_rounding_stays_within_half_a_displayed_tenth() {
     type ByteFormat = (fn(u64) -> String, u128, [&'static str; 7]);
     let formats: [ByteFormat; 2] = [
         (
-            units::bytes,
+            reword::bytes,
             1024,
             ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"],
         ),
         (
-            units::bytes_decimal,
+            reword::bytes_decimal,
             1000,
             ["B", "kB", "MB", "GB", "TB", "PB", "EB"],
         ),
@@ -86,29 +84,29 @@ fn byte_rounding_stays_within_half_a_displayed_tenth() {
 
 #[test]
 fn grouped_numbers_preserve_integer_precision() {
-    assert_eq!(units::number(0), "0");
-    assert_eq!(units::number(1234), "1,234");
-    assert_eq!(units::number(-1234), "-1,234");
+    assert_eq!(reword::number(0), "0");
+    assert_eq!(reword::number(1234), "1,234");
+    assert_eq!(reword::number(-1234), "-1,234");
     assert_eq!(
-        units::number(9_007_199_254_740_993_u64),
+        reword::number(9_007_199_254_740_993_u64),
         "9,007,199,254,740,993"
     );
-    assert_eq!(units::number(u64::MAX), "18,446,744,073,709,551,615");
+    assert_eq!(reword::number(u64::MAX), "18,446,744,073,709,551,615");
     assert_eq!(
-        units::number(u128::MAX),
+        reword::number(u128::MAX),
         "340,282,366,920,938,463,463,374,607,431,768,211,455"
     );
     assert_eq!(
-        units::number(i128::MIN),
+        reword::number(i128::MIN),
         "-170,141,183,460,469,231,731,687,303,715,884,105,728"
     );
 }
 
 #[test]
 fn grouped_numbers_preserve_fractions_and_exponents() {
-    assert_eq!(units::number(1234.56), "1,234.56");
-    assert_eq!(units::number(-10000.0), "-10,000");
-    assert_eq!(units::number(1234567.89), "1,234,567.89");
+    assert_eq!(reword::number(1234.56), "1,234.56");
+    assert_eq!(reword::number(-10000.0), "-10,000");
+    assert_eq!(reword::number(1234567.89), "1,234,567.89");
     for (input, expected) in [
         ("+1234567.8900", "+1,234,567.8900"),
         ("12345.670e+8", "12,345.670e+8"),
@@ -116,13 +114,13 @@ fn grouped_numbers_preserve_fractions_and_exponents() {
         ("1234.", "1,234."),
         ("0.000012345", "0.000012345"),
     ] {
-        assert_eq!(units::number(input), expected);
+        assert_eq!(reword::number(input), expected);
     }
-    assert_eq!(units::number(format_args!("{:e}", 12345.0)), "1.2345e4");
+    assert_eq!(reword::number(format_args!("{:e}", 12345.0)), "1.2345e4");
     for n in [0.0, -0.0, f64::MAX, f64::MIN_POSITIVE, f64::from_bits(1)] {
-        let output = units::number(n);
+        let output = reword::number(n);
         assert_eq!(output.replace(',', ""), n.to_string());
-        assert_eq!(units::number(&output), output);
+        assert_eq!(reword::number(&output), output);
     }
 }
 
@@ -142,10 +140,10 @@ fn grouped_numbers_leave_other_text_unchanged() {
         "１２３４",
         "hello",
     ] {
-        assert_eq!(units::number(input), input);
+        assert_eq!(reword::number(input), input);
     }
     for input in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
-        assert_eq!(units::number(input), input.to_string());
+        assert_eq!(reword::number(input), input.to_string());
     }
 }
 
@@ -171,7 +169,7 @@ fn compact_numbers() {
         (1_000_000_000_000.0, "1T"),
         (1_000_000_000_000_000.0, "1000T"),
     ] {
-        assert_eq!(units::number_short(input), expected, "input: {input}");
+        assert_eq!(reword::number_short(input), expected, "input: {input}");
     }
 }
 
@@ -184,14 +182,14 @@ fn compact_numbers_handle_float_extremes() {
         f64::MIN_POSITIVE,
         f64::from_bits(1),
     ] {
-        assert_eq!(units::number_short(input), input.to_string());
+        assert_eq!(reword::number_short(input), input.to_string());
     }
     for input in [1000.0, 999_999.0, 1e20, f64::MAX] {
-        let positive = units::number_short(input);
-        let negative = units::number_short(-input);
+        let positive = reword::number_short(input);
+        let negative = reword::number_short(-input);
         assert_eq!(negative, format!("-{positive}"));
     }
-    assert!(units::number_short(f64::MAX).ends_with('T'));
+    assert!(reword::number_short(f64::MAX).ends_with('T'));
 }
 
 #[test]
@@ -209,10 +207,10 @@ fn durations() {
         (90061, "1d 1h 1m 1s"),
         (u64::MAX, "213503982334601d 7h 0m 15s"),
     ] {
-        assert_eq!(units::duration(seconds), expected);
+        assert_eq!(reword::duration(seconds), expected);
     }
     let value = core::time::Duration::from_millis(1500);
-    assert_eq!(units::duration(value.as_secs()), "1s");
+    assert_eq!(reword::duration(value.as_secs()), "1s");
 }
 
 #[test]
@@ -248,27 +246,27 @@ fn percentages() {
         (-0.0001, "-0%"),
         (f64::from_bits(1), "0%"),
     ] {
-        assert_eq!(units::percent(ratio), expected, "ratio: {ratio}");
+        assert_eq!(reword::percent(ratio), expected, "ratio: {ratio}");
     }
     for ratio in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
-        assert_eq!(units::percent(ratio), format!("{ratio}%"));
+        assert_eq!(reword::percent(ratio), format!("{ratio}%"));
     }
     // A finite ratio must not turn into infinity when scaled by 100.
-    assert_eq!(units::percent(f64::MAX), format!("{:.0}00%", f64::MAX));
-    assert_eq!(units::percent(-f64::MAX), format!("{:.0}00%", -f64::MAX));
+    assert_eq!(reword::percent(f64::MAX), format!("{:.0}00%", f64::MAX));
+    assert_eq!(reword::percent(-f64::MAX), format!("{:.0}00%", -f64::MAX));
 }
 
 #[test]
 fn byte_rates() {
-    assert_eq!(units::bytes_per_second(0), "0 B/s");
-    assert_eq!(units::bytes_per_second(1023), "1023 B/s");
-    assert_eq!(units::bytes_per_second(1536), "1.5 KiB/s");
-    assert_eq!(units::bytes_per_second(1_048_525), "1.0 MiB/s");
-    assert_eq!(units::bytes_per_second(u64::MAX), "16.0 EiB/s");
-    assert_eq!(units::bytes_per_second_decimal(0), "0 B/s");
-    assert_eq!(units::bytes_per_second_decimal(1500), "1.5 kB/s");
-    assert_eq!(units::bytes_per_second_decimal(999_950), "1.0 MB/s");
-    assert_eq!(units::bytes_per_second_decimal(u64::MAX), "18.4 EB/s");
+    assert_eq!(reword::bytes_per_second(0), "0 B/s");
+    assert_eq!(reword::bytes_per_second(1023), "1023 B/s");
+    assert_eq!(reword::bytes_per_second(1536), "1.5 KiB/s");
+    assert_eq!(reword::bytes_per_second(1_048_525), "1.0 MiB/s");
+    assert_eq!(reword::bytes_per_second(u64::MAX), "16.0 EiB/s");
+    assert_eq!(reword::bytes_per_second_decimal(0), "0 B/s");
+    assert_eq!(reword::bytes_per_second_decimal(1500), "1.5 kB/s");
+    assert_eq!(reword::bytes_per_second_decimal(999_950), "1.0 MB/s");
+    assert_eq!(reword::bytes_per_second_decimal(u64::MAX), "18.4 EB/s");
 }
 
 #[test]
@@ -296,6 +294,6 @@ fn compact_durations() {
         (Duration::from_secs(86_400), "1 d"),
         (Duration::MAX, "213503982334601.292 d"),
     ] {
-        assert_eq!(units::duration_short(value), expected, "value: {value:?}");
+        assert_eq!(reword::duration_short(value), expected, "value: {value:?}");
     }
 }

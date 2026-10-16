@@ -20,10 +20,10 @@ use core::time::Duration;
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::units::bytes(0), "0 B");
-/// assert_eq!(reword::units::bytes(1023), "1023 B");
-/// assert_eq!(reword::units::bytes(1024), "1.0 KiB");
-/// assert_eq!(reword::units::bytes(1536), "1.5 KiB");
+/// assert_eq!(reword::bytes(0), "0 B");
+/// assert_eq!(reword::bytes(1023), "1023 B");
+/// assert_eq!(reword::bytes(1024), "1.0 KiB");
+/// assert_eq!(reword::bytes(1536), "1.5 KiB");
 /// ```
 pub fn bytes(n: u64) -> String {
     format_bytes(n, 1024, &["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"])
@@ -36,9 +36,9 @@ pub fn bytes(n: u64) -> String {
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::units::bytes_decimal(1000), "1.0 kB");
-/// assert_eq!(reword::units::bytes_decimal(1500), "1.5 kB");
-/// assert_eq!(reword::units::bytes_decimal(1_000_000), "1.0 MB");
+/// assert_eq!(reword::bytes_decimal(1000), "1.0 kB");
+/// assert_eq!(reword::bytes_decimal(1500), "1.5 kB");
+/// assert_eq!(reword::bytes_decimal(1_000_000), "1.0 MB");
 /// ```
 pub fn bytes_decimal(n: u64) -> String {
     format_bytes(n, 1000, &["B", "kB", "MB", "GB", "TB", "PB", "EB"])
@@ -51,8 +51,8 @@ pub fn bytes_decimal(n: u64) -> String {
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::units::bytes_per_second(1536), "1.5 KiB/s");
-/// assert_eq!(reword::units::bytes_per_second(0), "0 B/s");
+/// assert_eq!(reword::bytes_per_second(1536), "1.5 KiB/s");
+/// assert_eq!(reword::bytes_per_second(0), "0 B/s");
 /// ```
 pub fn bytes_per_second(n: u64) -> String {
     let mut output = bytes(n);
@@ -67,7 +67,7 @@ pub fn bytes_per_second(n: u64) -> String {
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::units::bytes_per_second_decimal(1500), "1.5 kB/s");
+/// assert_eq!(reword::bytes_per_second_decimal(1500), "1.5 kB/s");
 /// ```
 pub fn bytes_per_second_decimal(n: u64) -> String {
     let mut output = bytes_decimal(n);
@@ -117,10 +117,10 @@ fn format_bytes(n: u64, base: u64, units: &[&str; 7]) -> String {
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::units::number(1234.56), "1,234.56");
-/// assert_eq!(reword::units::number(-10000), "-10,000");
-/// assert_eq!(reword::units::number(9_007_199_254_740_993_u64), "9,007,199,254,740,993");
-/// assert_eq!(reword::units::number("12345.670e+8"), "12,345.670e+8");
+/// assert_eq!(reword::number(1234.56), "1,234.56");
+/// assert_eq!(reword::number(-10000), "-10,000");
+/// assert_eq!(reword::number(9_007_199_254_740_993_u64), "9,007,199,254,740,993");
+/// assert_eq!(reword::number("12345.670e+8"), "12,345.670e+8");
 /// ```
 pub fn number<T: Display>(n: T) -> String {
     let text = n.to_string();
@@ -193,10 +193,10 @@ fn integer_digits(text: &str) -> Option<(usize, usize)> {
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::units::number_short(1500.0), "1.5K");
-/// assert_eq!(reword::units::number_short(1_000_000.0), "1M");
-/// assert_eq!(reword::units::number_short(999_999.0), "1M");
-/// assert_eq!(reword::units::number_short(-2500.0), "-2.5K");
+/// assert_eq!(reword::number_short(1500.0), "1.5K");
+/// assert_eq!(reword::number_short(1_000_000.0), "1M");
+/// assert_eq!(reword::number_short(999_999.0), "1M");
+/// assert_eq!(reword::number_short(-2500.0), "-2.5K");
 /// ```
 pub fn number_short(n: f64) -> String {
     if !n.is_finite() || n.abs() < 1000.0 {
@@ -235,9 +235,9 @@ pub fn number_short(n: f64) -> String {
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::units::percent(0.125), "12.5%");
-/// assert_eq!(reword::units::percent(1.0), "100%");
-/// assert_eq!(reword::units::percent(-0.25), "-25%");
+/// assert_eq!(reword::percent(0.125), "12.5%");
+/// assert_eq!(reword::percent(1.0), "100%");
+/// assert_eq!(reword::percent(-0.25), "-25%");
 /// ```
 pub fn percent(ratio: f64) -> String {
     if !ratio.is_finite() {
@@ -274,9 +274,9 @@ pub fn percent(ratio: f64) -> String {
 ///
 /// # Examples
 /// ```
-/// assert_eq!(reword::units::duration(3661), "1h 1m 1s");
-/// assert_eq!(reword::units::duration(86401), "1d 0h 0m 1s");
-/// assert_eq!(reword::units::duration(0), "0s");
+/// assert_eq!(reword::duration(3661), "1h 1m 1s");
+/// assert_eq!(reword::duration(86401), "1d 0h 0m 1s");
+/// assert_eq!(reword::duration(0), "0s");
 /// ```
 pub fn duration(seconds: u64) -> String {
     let days = seconds / 86_400;
@@ -312,10 +312,10 @@ pub fn duration(seconds: u64) -> String {
 /// ```
 /// use core::time::Duration;
 ///
-/// assert_eq!(reword::units::duration_short(Duration::from_nanos(850)), "850 ns");
-/// assert_eq!(reword::units::duration_short(Duration::from_micros(1200)), "1.2 ms");
-/// assert_eq!(reword::units::duration_short(Duration::from_millis(1250)), "1.25 s");
-/// assert_eq!(reword::units::duration_short(Duration::from_secs(90)), "1.5 m");
+/// assert_eq!(reword::duration_short(Duration::from_nanos(850)), "850 ns");
+/// assert_eq!(reword::duration_short(Duration::from_micros(1200)), "1.2 ms");
+/// assert_eq!(reword::duration_short(Duration::from_millis(1250)), "1.25 s");
+/// assert_eq!(reword::duration_short(Duration::from_secs(90)), "1.5 m");
 /// ```
 pub fn duration_short(value: Duration) -> String {
     let nanos = value.as_nanos();
